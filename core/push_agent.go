@@ -1,6 +1,9 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type pushAgent struct {
 	Pushs chan *PushEvent
@@ -20,6 +23,13 @@ func (agent pushAgent) Send(push *PushEvent) {
 func (agent pushAgent) run() {
 	for {
 		event := <-agent.Pushs
-		fmt.Printf("%v", event)
+		fmt.Printf("Received a push event: %+v\n", event)
+		ref := strings.Split(event.Ref, "/")
+		if len(ref) > 0 {
+			branch := ref[len(ref)-1]
+			if branch == "master" || branch == "staging" {
+				BuildManager.queuePushBuild(event)
+			}
+		}
 	}
 }

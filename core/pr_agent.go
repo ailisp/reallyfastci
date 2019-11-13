@@ -20,6 +20,7 @@ func (agent prAgent) Send(pr *PrEvent) {
 func (agent prAgent) run() {
 	for {
 		event := <-agent.Prs
-		fmt.Printf("%v\n", event)
+		fmt.Printf("Received a pull request event: %+v\n", event)
+		BuildManager.queuePrBuild(event)
 	}
 }

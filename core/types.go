@@ -1,8 +1,9 @@
 package core
 
 type PrEvent struct {
-	Before      string      `json:"before" validate:"required"`
-	After       string      `json:"after" validate:"required"`
+	Action      string      `json:"action" required:"true"`
+	Before      string      `json:"before"`
+	After       string      `json:"after"`
 	PullRequest PullRequest `json:"pull_request" validate:"required"`
 }
 
