@@ -4,43 +4,58 @@ type Build struct {
 	repo   string
 	branch string
 	commit string
+	status int
 
-	status chan int
-	cancel chan bool
+	eventChan chan *BuildEvent
+	cancel    chan bool
 }
 
+type BuildEvent struct {
+	commit string
+	status int
+}
+
+// BuildStatus
 const (
-	Start int = iota
-	CreateMachine
-	CopyRunner
-	Clone
-	Run
-	Success
-	Fail
-	Cancel
-	MachineDeleted
+	BuildQueued int = iota
+	BuildReadyToRun
+	BuildRepoCloned
+
+	BuildSucceed
+	BuildFailed
+	BuildCancelled
 )
 
-func newBuild(repo string, branch string, commit string) Build {
-	build := Build{
-		repo:   repo,
-		branch: branch,
-		commit: commit,
+type newBuildParam struct {
+	repo      string
+	branch    string
+	commit    string
+	eventChan chan *BuildEvent
+}
 
-		status: make(chan int),
-		cancel: make(chan bool),
+func newBuild(param *newBuildParam) *Build {
+	build := &Build{
+		repo:   param.repo,
+		branch: param.branch,
+		commit: param.commit,
+
+		eventChan: newBuildParam.eventChan,
+		cancel:    make(chan bool),
 	}
-	build.status <- Start
+	build.status = BuildQueued
 	go build.run()
 	return build
 }
 
 func (build Build) run() {
 	for {
-
+		switch build.status {
+		case BuildQueued:
+			machine := MachineManager.RequestMachine()
+		}
 	}
 }
 
-func (build Build) sendStop() {
+func (build Build) sendCancel() {
 	build.cancel <- true
 }

@@ -6,6 +6,7 @@ type buildManager struct {
 	pendingPrBuilds   chan *PrEvent
 	pendingPushBuilds chan *PushEvent
 	runningBuilds     *hashmap.HashMap
+	buildFinishEvents chan *BuildEvent
 }
 
 var BuildManager buildManager
@@ -14,6 +15,7 @@ func InitBuildManager() {
 	BuildManager = buildManager{
 		pendingPrBuilds:   make(chan *PrEvent, 100),
 		pendingPushBuilds: make(chan *PushEvent, 100),
+		buildFinishEvents: make(chan *BuildEvent, 100),
 		runningBuilds:     &hashmap.HashMap{},
 	}
 
@@ -27,6 +29,11 @@ func (manager buildManager) run() {
 			manager.runPushBuild(push)
 		case pr := <-manager.pendingPrBuilds:
 			manager.runPrBuild(pr)
+		case buildFinish := <-manager.buildFinishEvents:
+			_, ok := manager.runningBuilds.GetStringKey(buildFinish.commit)
+			if ok {
+				manager.runningBuilds.Del(buildFinish.commit)
+			}
 		}
 	}
 }
@@ -42,29 +49,37 @@ func (manager buildManager) queuePrBuild(pr *PrEvent) {
 func (manager buildManager) runPushBuild(push *PushEvent) {
 	prevBuild, ok := manager.runningBuilds.GetStringKey(push.After)
 	if ok {
-		prevBuild.(Build).sendStop()
+		prevBuild.(*Build).sendCancel()
 	}
 
 	prevCommitBuild, ok := manager.runningBuilds.GetStringKey(push.Before)
 	if ok {
-		prevCommitBuild.(Build).sendStop()
+		prevCommitBuild.(*Build).sendCancel()
 	}
 
-	manager.runningBuilds.Set(push.After, newBuild(push.Repo.HtmlUrl, push.Ref, push.After))
+	manager.runningBuilds.Set(push.After, newBuild(&newBuildParam{
+		repo:   push.Repo.HtmlUrl,
+		branch: push.Ref,
+		commit: push.After,
+	}))
 }
 
 func (manager buildManager) runPrBuild(pr *PrEvent) {
 	if pr.Before != "" {
 		prevBuild, ok := manager.runningBuilds.GetStringKey(pr.Before)
 		if ok {
-			prevBuild.(Build).sendStop()
+			prevBuild.(*Build).sendCancel()
 		}
 	}
 	if pr.After != "" {
 		prevBuild, ok := manager.runningBuilds.GetStringKey(pr.After)
 		if ok {
-			prevBuild.(Build).sendStop()
+			prevBuild.(*Build).sendCancel()
 		}
 	}
-	manager.runningBuilds.Set(pr.PullRequest.Head.Sha, newBuild(pr.PullRequest.Head.Repo.HtmlUrl, pr.PullRequest.Head.Ref, pr.PullRequest.Head.Sha))
+	manager.runningBuilds.Set(pr.PullRequest.Head.Sha, &newBuildParam{
+		repo:   pr.PullRequest.Head.Repo.HtmlUrl,
+		branch: pr.PullRequest.Head.Ref,
+		commit: pr.PullRequest.Head.Sha,
+	})
 }
