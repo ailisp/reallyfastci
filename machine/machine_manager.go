@@ -46,7 +46,7 @@ func handleReq(req *MachineRequest) {
 }
 
 func createMachine(machineChan chan *Machine) {
-	machine := createMachine()
+	machine := newMachine()
 	machines.Set(machine.name, machine)
 	machineChan <- machine
 }

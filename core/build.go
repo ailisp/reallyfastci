@@ -1,13 +1,17 @@
 package core
 
-type Build struct {
-	repo   string
-	branch string
-	commit string
-	status int
+import "github.com/ailisp/reallyfastci/machine"
 
-	eventChan chan *BuildEvent
+type Build struct {
+	repo        string
+	branch      string
+	commit      string
+	buildScript string
+	status      int
+
+	eventChan *chan *BuildEvent
 	cancel    chan bool
+	machine   *machine.Machine
 }
 
 type BuildEvent struct {
@@ -18,8 +22,9 @@ type BuildEvent struct {
 // BuildStatus
 const (
 	BuildQueued int = iota
-	BuildReadyToRun
+	BuildMachineStarted
 	BuildRepoCloned
+	BuildScriptCopied
 
 	BuildSucceed
 	BuildFailed
@@ -27,32 +32,53 @@ const (
 )
 
 type newBuildParam struct {
-	repo      string
-	branch    string
-	commit    string
-	eventChan chan *BuildEvent
+	repo        string
+	branch      string
+	commit      string
+	buildScript string
+	eventChan   *chan *BuildEvent
 }
 
 func newBuild(param *newBuildParam) *Build {
 	build := &Build{
-		repo:   param.repo,
-		branch: param.branch,
-		commit: param.commit,
+		repo:        param.repo,
+		branch:      param.branch,
+		commit:      param.commit,
+		buildScript: param.buildScript,
 
-		eventChan: newBuildParam.eventChan,
+		eventChan: param.eventChan,
 		cancel:    make(chan bool),
 	}
-	build.status = BuildQueued
+	build.updateStatus(BuildQueued)
+
 	go build.run()
 	return build
 }
 
-func (build Build) run() {
-	for {
-		switch build.status {
-		case BuildQueued:
-			machine := MachineManager.RequestMachine()
-		}
+func (build *Build) run() {
+	build.machine = <-machine.RequestCreateMachine()
+	build.updateStatus(BuildMachineStarted)
+
+	build.machine.CloneRepo(build.repo, build.branch, build.commit)
+	build.updateStatus(BuildRepoCloned)
+
+	build.machine.CopyBuildScript(build.buildScript)
+	build.updateStatus(BuildScriptCopied)
+
+	exitCode := build.machine.RunBuild(build.buildScript)
+	if exitCode == 0 {
+		build.updateStatus(BuildSucceed)
+	} else {
+		build.updateStatus(BuildFailed)
+	}
+
+}
+
+func (build Build) updateStatus(status int) {
+	build.status = status
+	(*build.eventChan) <- &BuildEvent{
+		commit: build.commit,
+		status: build.status,
 	}
 }
 
