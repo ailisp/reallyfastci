@@ -1,7 +1,7 @@
 package webhook
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/ailisp/reallyfastci/core"
@@ -16,27 +16,33 @@ func GithubWebhook(c echo.Context) (err error) {
 	case "pull_request":
 		pr := new(core.PrEvent)
 		if err = c.Bind(pr); err != nil {
+			log.Printf("%v", err)
 			return c.JSON(http.StatusBadRequest, "")
 		}
 		if err = c.Validate(pr); err != nil {
+			log.Printf("%v", err)
 			return c.JSON(http.StatusBadRequest, "")
 		}
-		core.PrAgent.Send(pr)
+		prs <- pr
 		return c.JSON(http.StatusOK, "")
 	case "push":
 		push := new(core.PushEvent)
 		if err = c.Bind(push); err != nil {
-			fmt.Printf("%v", err)
+			log.Printf("%v", err)
 			return c.JSON(http.StatusBadRequest, "")
 		}
 		if err = c.Validate(push); err != nil {
-			fmt.Printf("%v", err)
-
+			log.Printf("%v", err)
 			return c.JSON(http.StatusBadRequest, "")
 		}
-		core.PushAgent.Send(push)
+		pushes <- push
 		return c.JSON(http.StatusOK, "")
 	default:
 		return c.JSON(http.StatusOK, "Ignored")
 	}
+}
+
+func InitWebhook() {
+	initPrAgent()
+	initPushAgent()
 }

@@ -1,34 +1,37 @@
-package core
+package build
 
-import "github.com/cornelk/hashmap"
+import (
+	"github.com/ailisp/reallyfastci/core"
+	"github.com/cornelk/hashmap"
+)
 
 type buildManager struct {
-	pendingPrBuilds   chan *PrEvent
-	pendingPushBuilds chan *PushEvent
+	pendingPrBuilds   chan *core.PrEvent
+	pendingPushBuilds chan *core.PushEvent
 	runningBuilds     *hashmap.HashMap
 	buildFinishEvents chan *BuildEvent
 }
 
-var BuildManager buildManager
+var manager buildManager
 
 func InitBuildManager() {
-	BuildManager = buildManager{
-		pendingPrBuilds:   make(chan *PrEvent, 100),
-		pendingPushBuilds: make(chan *PushEvent, 100),
+	manager = buildManager{
+		pendingPrBuilds:   make(chan *core.PrEvent, 100),
+		pendingPushBuilds: make(chan *core.PushEvent, 100),
 		buildFinishEvents: make(chan *BuildEvent, 100),
 		runningBuilds:     &hashmap.HashMap{},
 	}
 
-	go BuildManager.run()
+	go runBuildManager()
 }
 
-func (manager buildManager) run() {
+func runBuildManager() {
 	for {
 		select {
 		case push := <-manager.pendingPushBuilds:
-			manager.runPushBuild(push)
+			runPushBuild(push)
 		case pr := <-manager.pendingPrBuilds:
-			manager.runPrBuild(pr)
+			runPrBuild(pr)
 		case buildFinish := <-manager.buildFinishEvents:
 			_, ok := manager.runningBuilds.GetStringKey(buildFinish.commit)
 			if ok {
@@ -38,15 +41,15 @@ func (manager buildManager) run() {
 	}
 }
 
-func (manager buildManager) queuePushBuild(push *PushEvent) {
+func QueuePushBuild(push *core.PushEvent) {
 	manager.pendingPushBuilds <- push
 }
 
-func (manager buildManager) queuePrBuild(pr *PrEvent) {
+func QueuePrBuild(pr *core.PrEvent) {
 	manager.pendingPrBuilds <- pr
 }
 
-func (manager buildManager) runPushBuild(push *PushEvent) {
+func runPushBuild(push *core.PushEvent) {
 	prevBuild, ok := manager.runningBuilds.GetStringKey(push.After)
 	if ok {
 		prevBuild.(*Build).sendCancel()
@@ -64,7 +67,7 @@ func (manager buildManager) runPushBuild(push *PushEvent) {
 	}))
 }
 
-func (manager buildManager) runPrBuild(pr *PrEvent) {
+func runPrBuild(pr *core.PrEvent) {
 	if pr.Before != "" {
 		prevBuild, ok := manager.runningBuilds.GetStringKey(pr.Before)
 		if ok {

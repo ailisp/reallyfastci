@@ -2,9 +2,13 @@ package machine
 
 import "github.com/cornelk/hashmap"
 
-var machines *hashmap.HashMap
-var machineRequests chan *MachineRequest
-var stopChan chan bool
+type machineManager struct {
+	machines        *hashmap.HashMap
+	machineRequests chan *MachineRequest
+	stopChan        chan bool
+}
+
+var manager machineManager
 
 type MachineRequest struct {
 	Op                int
@@ -18,19 +22,19 @@ const (
 	opDeleteMachine
 )
 
-func StartMachineManager() {
-	machines = &hashmap.HashMap{}
-	machineRequests = make(chan *MachineRequest, 100)
-	stopChan = make(chan bool)
-	go run()
+func InitMachineManager() {
+	manager.machines = &hashmap.HashMap{}
+	manager.machineRequests = make(chan *MachineRequest, 100)
+	manager.stopChan = make(chan bool)
+	go runMachineManager()
 }
 
-func run() {
+func runMachineManager() {
 	for {
 		select {
-		case _ = <-stopChan:
+		case _ = <-manager.stopChan:
 			break
-		case req := <-machineRequests:
+		case req := <-manager.machineRequests:
 			handleReq(req)
 		}
 	}
@@ -47,14 +51,14 @@ func handleReq(req *MachineRequest) {
 
 func createMachine(machineChan chan *Machine) {
 	machine := newMachine()
-	machines.Set(machine.name, machine)
+	manager.machines.Set(machine.name, machine)
 	machineChan <- machine
 }
 
 func deleteMachine(deleteMachineName string, deleteFinishChan chan bool) {
-	machine, ok := machines.GetStringKey(deleteMachineName)
+	machine, ok := manager.machines.GetStringKey(deleteMachineName)
 	if ok {
-		machines.Del(deleteMachineName)
+		manager.machines.Del(deleteMachineName)
 		machine.(*Machine).delete()
 		deleteFinishChan <- true
 	}
@@ -62,7 +66,7 @@ func deleteMachine(deleteMachineName string, deleteFinishChan chan bool) {
 
 func RequestCreateMachine() (machineChan chan *Machine) {
 	machineChan = make(chan *Machine)
-	machineRequests <- &MachineRequest{Op: opCreateMachine,
+	manager.machineRequests <- &MachineRequest{Op: opCreateMachine,
 		MachineChan: machineChan,
 	}
 	return machineChan
@@ -70,7 +74,7 @@ func RequestCreateMachine() (machineChan chan *Machine) {
 
 func RequestDeleteMachine(deleteMachineName string) (finishChan chan bool) {
 	finishChan = make(chan bool)
-	machineRequests <- &MachineRequest{Op: opDeleteMachine,
+	manager.machineRequests <- &MachineRequest{Op: opDeleteMachine,
 		DeleteFinishChan:  finishChan,
 		DeleteMachineName: deleteMachineName,
 	}

@@ -6,8 +6,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	"github.com/ailisp/reallyfastci/build"
 	"github.com/ailisp/reallyfastci/config"
-	"github.com/ailisp/reallyfastci/core"
+	"github.com/ailisp/reallyfastci/machine"
 	"github.com/ailisp/reallyfastci/webhook"
 	"github.com/go-playground/validator/v10"
 )
@@ -23,8 +24,9 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 func main() {
 	config.LoadConfig()
 
-	core.InitPushAgent()
-	core.InitPrAgent()
+	machine.InitMachineManager()
+	build.InitBuildManager()
+	webhook.InitWebhook()
 
 	e := echo.New()
 	e.Validator = &CustomValidator{validator: validator.New()}

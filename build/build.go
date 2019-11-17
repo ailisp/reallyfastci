@@ -1,4 +1,4 @@
-package core
+package build
 
 import "github.com/ailisp/reallyfastci/machine"
 
@@ -9,7 +9,7 @@ type Build struct {
 	buildScript string
 	status      int
 
-	eventChan *chan *BuildEvent
+	eventChan chan *BuildEvent
 	cancel    chan bool
 	machine   *machine.Machine
 }
@@ -36,7 +36,7 @@ type newBuildParam struct {
 	branch      string
 	commit      string
 	buildScript string
-	eventChan   *chan *BuildEvent
+	eventChan   chan *BuildEvent
 }
 
 func newBuild(param *newBuildParam) *Build {
@@ -74,14 +74,14 @@ func (build *Build) run() {
 
 }
 
-func (build Build) updateStatus(status int) {
+func (build *Build) updateStatus(status int) {
 	build.status = status
-	(*build.eventChan) <- &BuildEvent{
+	build.eventChan <- &BuildEvent{
 		commit: build.commit,
 		status: build.status,
 	}
 }
 
-func (build Build) sendCancel() {
+func (build *Build) sendCancel() {
 	build.cancel <- true
 }
