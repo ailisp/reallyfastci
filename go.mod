@@ -3,6 +3,7 @@ module github.com/ailisp/reallyfastci
 go 1.13
 
 require (
+	github.com/choleraehyq/gofunctools v0.0.0-20170311135431-c5e9260901e5
 	github.com/cornelk/hashmap v1.0.1
 	github.com/go-playground/validator/v10 v10.0.0
 	github.com/google/uuid v1.1.1

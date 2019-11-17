@@ -1,5 +1,7 @@
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/choleraehyq/gofunctools v0.0.0-20170311135431-c5e9260901e5 h1:6rlfgPWQuP2E6Jvk+1EGHGiZQpPGIoy31t+bYSt79kc=
+github.com/choleraehyq/gofunctools v0.0.0-20170311135431-c5e9260901e5/go.mod h1:2dK9uKQAocMGPze9BcZ4N4UA7OkXUFa/+KQrTiQ4nsc=
 github.com/cornelk/hashmap v1.0.1 h1:RXGcy29hEdLLV8T6aK4s+BAd4tq4+3Hq50N2GoG0uIg=
 github.com/cornelk/hashmap v1.0.1/go.mod h1:8wbysTUDnwJGrPZ1Iwsou3m+An6sldFrJItjRhfegCw=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

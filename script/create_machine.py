@@ -7,7 +7,7 @@ def create_machine(*, name, machine_type, disk_size, image_project, image_family
     machine = gcloud.create(
         name=name,
         machine_type=machine_type,
-        disk_size=disk_size,
+        disk_size=f'{disk_size}G',
         image_project=image_project,
         image_family=image_family,
         zone=zone,
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--machine_type', required=True,
                         help='Machine type of the gcloud machine')
     parser.add_argument('--disk_size', required=True,
-                        help='Disk size of the gcloud machine')
+                        help='Disk size of the gcloud machine in GB')
     parser.add_argument('--image_project', required=True,
                         help='Image project of disk image')
     parser.add_argument('--image_family', required=True,

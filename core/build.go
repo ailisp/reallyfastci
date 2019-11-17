@@ -62,11 +62,11 @@ func (build *Build) run() {
 	build.machine.CloneRepo(build.repo, build.branch, build.commit)
 	build.updateStatus(BuildRepoCloned)
 
-	build.machine.CopyBuildScript(build.buildScript)
+	build.machine.CopyBuildScript()
 	build.updateStatus(BuildScriptCopied)
 
-	exitCode := build.machine.RunBuild(build.buildScript)
-	if exitCode == 0 {
+	err := build.machine.RunBuild(build.commit)
+	if err == nil {
 		build.updateStatus(BuildSucceed)
 	} else {
 		build.updateStatus(BuildFailed)

@@ -10,6 +10,7 @@ func Run(name string, arg ...string) (err error) {
 	cmd := exec.Command("pipenv", args...)
 	err = cmd.Run()
 	if err != nil {
-		log.Fatalf("cmd.Run() failed with %s\n", err)
+		log.Printf("script.Run() %v %v failed with %s\n", name, arg, err)
 	}
+	return
 }
