@@ -9,12 +9,13 @@ type Machine struct {
 	name string
 }
 
-func newMachine() (machine *Machine) {
+func newMachine() (machine *Machine, err error) {
 	machine = &Machine{
 		name: uuid.New().String(),
 	}
-	script.CreateMachine(machine.name)
-	return machine
+
+	err = script.Run("pipenv", "run", "python", "create_machine.py")
+	return machine, err
 }
 
 func (machine *Machine) delete() {

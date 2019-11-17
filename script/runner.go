@@ -1,20 +1,15 @@
 package script
 
-func CreateMachine(name string) {
+import (
+	"log"
+	"os/exec"
+)
 
-}
-
-func DeleteMachine(name string) {
-
-}
-
-func CloneRepo(machineName string, url string, branch string, commit string) {
-}
-
-func CopyBuildScript(machineName string, buildScript string) {
-
-}
-
-func RunBuild(machineName string, buildScriptName string) (exitCode int) {
-
+func Run(name string, arg ...string) (err error) {
+	args := append([]string{"run", "python", name}, arg...)
+	cmd := exec.Command("pipenv", args...)
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalf("cmd.Run() failed with %s\n", err)
+	}
 }
