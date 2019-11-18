@@ -1,14 +1,13 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/ailisp/reallyfastci/build"
 	"github.com/ailisp/reallyfastci/config"
 	"github.com/ailisp/reallyfastci/machine"
+	"github.com/ailisp/reallyfastci/notification"
 	"github.com/ailisp/reallyfastci/webhook"
 	"github.com/go-playground/validator/v10"
 )
@@ -29,12 +28,12 @@ func main() {
 	webhook.InitWebhook()
 
 	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Use(middleware.CORS())
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
 	e.POST("/github", webhook.GithubWebhook)
-
+	e.Static("/", "./public")
+	e.GET("/ws", notification.WebSocket)
 	e.Logger.Fatal(e.Start(":1323"))
 }

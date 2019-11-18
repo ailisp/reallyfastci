@@ -1,57 +1,57 @@
 package machine
 
 import (
+	"strconv"
+
 	"github.com/ailisp/reallyfastci/config"
 	"github.com/ailisp/reallyfastci/script"
-	"github.com/google/uuid"
-	"strconv"
 )
 
 type Machine struct {
-	name string
+	Name string
 }
 
-func newMachine() (machine *Machine) {
+func newMachine(machineName string) (machine *Machine) {
 	machine = &Machine{
-		name: uuid.New().String(),
+		Name: machineName,
 	}
 
-	err := script.Run("create_machine.py",
-		"--name", machine.name,
+	err := <-script.Run("create_machine.py",
+		"--name", machine.Name,
 		"--machine_type", config.Config.Machine.MachineType,
 		"--disk_size", strconv.FormatUint(config.Config.Machine.DiskSizeGB, 10),
 		"--image_project", config.Config.Machine.ImageProject,
 		"--image_family", config.Config.Machine.ImageFamily,
 		"--zone", config.Config.Machine.Zone)
 	if err != nil {
-		return &Machine{}
+		return nil
 	} else {
 		return machine
 	}
 }
 
 func (machine *Machine) delete() error {
-	return script.Run("delete_machine.py",
-		"--name", machine.name)
+	return <-script.Run("delete_machine.py",
+		"--name", machine.Name)
 }
 
-func (machine *Machine) CloneRepo(url string, branch string, commit string) error {
+func (machine *Machine) CloneRepo(url string, branch string, commit string) (errChan chan error) {
 	return script.Run("clone_repo_on_machine.py",
-		"--name", machine.name,
+		"--name", machine.Name,
 		"--url", url,
 		"--branch", branch,
 		"--commit", commit)
 }
 
-func (machine *Machine) CopyBuildScript() error {
+func (machine *Machine) CopyBuildScript() (errChan chan error) {
 	return script.Run("copy_build_script_to_machine.py",
-		"--name", machine.name,
+		"--name", machine.Name,
 		"--local_path", config.Config.Build.Script)
 }
 
-func (machine *Machine) RunBuild(commit string) (err error) {
+func (machine *Machine) RunBuild(commit string) (errChan chan error) {
 	return script.Run("run_build.py",
-		"--name", machine.name,
+		"--name", machine.Name,
 		"--commit", commit,
 		"--local_path", config.Config.Build.Script)
 }

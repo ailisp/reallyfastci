@@ -3,9 +3,12 @@ package config
 import (
 	"github.com/jinzhu/configor"
 	"log"
+	"strings"
 )
 
 var Config = struct {
+	ReallyFastCiUrl     string `required:"true"`
+	GithubToken         string `required:"true" env:"GITHUB_TOKEN"`
 	RepoUrl             string `required:"true"`
 	PushTriggerBranches []string
 
@@ -24,7 +27,20 @@ var Config = struct {
 	}
 }{}
 
+var RepoName string
+
 func LoadConfig() {
 	configor.Load(&Config, "config.yml")
+	RepoName = getRepoName(Config.RepoUrl)
 	log.Printf("config: %#v", Config)
+}
+
+func getRepoName(url string) (name string) {
+	parts := strings.Split(url, "/")
+	if parts[len(parts)-1] == "" {
+		name = strings.Join(parts[len(parts)-3:len(parts)-1], "/")
+	} else {
+		name = strings.Join(parts[len(parts)-2:len(parts)], "/")
+	}
+	return
 }

@@ -9,6 +9,10 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/jinzhu/configor v1.1.1
 	github.com/labstack/echo/v4 v4.1.11
+	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pelletier/go-toml v1.6.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stvp/go-toml-config v0.0.0-20170523163211-314328849d78
+	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	moul.io/http2curl v1.0.0 // indirect
 )

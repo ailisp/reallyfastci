@@ -37,3 +37,20 @@ type PushEvent struct {
 	After  string     `json:"after" validate:"required"`
 	Repo   Repository `json:"repository" validate:"required"`
 }
+
+type BuildEvent struct {
+	Commit string
+	Status int
+}
+
+// BuildStatus
+const (
+	BuildQueued int = iota
+	BuildMachineStarted
+	BuildRepoCloned
+	BuildScriptCopied
+
+	BuildSucceed
+	BuildFailed
+	BuildCancelled
+)

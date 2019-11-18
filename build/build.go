@@ -1,6 +1,9 @@
 package build
 
-import "github.com/ailisp/reallyfastci/machine"
+import (
+	"github.com/ailisp/reallyfastci/core"
+	"github.com/ailisp/reallyfastci/machine"
+)
 
 type Build struct {
 	repo        string
@@ -9,34 +12,16 @@ type Build struct {
 	buildScript string
 	status      int
 
-	eventChan chan *BuildEvent
-	cancel    chan bool
-	machine   *machine.Machine
+	cancel  chan bool
+	machine *machine.Machine
 }
-
-type BuildEvent struct {
-	commit string
-	status int
-}
-
-// BuildStatus
-const (
-	BuildQueued int = iota
-	BuildMachineStarted
-	BuildRepoCloned
-	BuildScriptCopied
-
-	BuildSucceed
-	BuildFailed
-	BuildCancelled
-)
 
 type newBuildParam struct {
 	repo        string
 	branch      string
 	commit      string
 	buildScript string
-	eventChan   chan *BuildEvent
+	eventChan   chan *core.BuildEvent
 }
 
 func newBuild(param *newBuildParam) *Build {
@@ -46,39 +31,85 @@ func newBuild(param *newBuildParam) *Build {
 		commit:      param.commit,
 		buildScript: param.buildScript,
 
-		eventChan: param.eventChan,
-		cancel:    make(chan bool),
+		cancel: make(chan bool),
 	}
-	build.updateStatus(BuildQueued)
+	build.updateStatus(core.BuildQueued)
 
 	go build.run()
 	return build
 }
 
 func (build *Build) run() {
-	build.machine = <-machine.RequestCreateMachine()
-	build.updateStatus(BuildMachineStarted)
-
-	build.machine.CloneRepo(build.repo, build.branch, build.commit)
-	build.updateStatus(BuildRepoCloned)
-
-	build.machine.CopyBuildScript()
-	build.updateStatus(BuildScriptCopied)
-
-	err := build.machine.RunBuild(build.commit)
-	if err == nil {
-		build.updateStatus(BuildSucceed)
-	} else {
-		build.updateStatus(BuildFailed)
+	for {
+		switch {
+		case build.status == core.BuildQueued:
+			machineName, machineChan := machine.RequestCreateMachine()
+			select {
+			case <-build.cancel:
+				machine.RequestDeleteMachine(machineName)
+				build.updateStatus(core.BuildCancelled)
+				return
+			case m := <-machineChan:
+				if m != nil {
+					build.machine = m
+					build.updateStatus(core.BuildMachineStarted)
+				} else {
+					build.updateStatus(core.BuildFailed)
+				}
+			}
+		case build.status == core.BuildMachineStarted:
+			errChan := build.machine.CloneRepo(build.repo, build.branch, build.commit)
+			select {
+			case <-build.cancel:
+				machine.RequestDeleteMachine(build.machine.Name)
+				build.updateStatus(core.BuildCancelled)
+				return
+			case err := <-errChan:
+				if err == nil {
+					build.updateStatus(core.BuildRepoCloned)
+				} else {
+					build.updateStatus(core.BuildFailed)
+				}
+			}
+		case build.status == core.BuildRepoCloned:
+			errChan := build.machine.CopyBuildScript()
+			select {
+			case <-build.cancel:
+				machine.RequestDeleteMachine(build.machine.Name)
+				build.updateStatus(core.BuildCancelled)
+				return
+			case err := <-errChan:
+				if err == nil {
+					build.updateStatus(core.BuildScriptCopied)
+				} else {
+					build.updateStatus(core.BuildFailed)
+				}
+			}
+		case build.status == core.BuildScriptCopied:
+			errChan := build.machine.RunBuild(build.commit)
+			select {
+			case <-build.cancel:
+				machine.RequestDeleteMachine(build.machine.Name)
+				build.updateStatus(core.BuildCancelled)
+				return
+			case err := <-errChan:
+				if err == nil {
+					build.updateStatus(core.BuildSucceed)
+					return
+				} else {
+					build.updateStatus(core.BuildFailed)
+					return
+				}
+			}
+		}
 	}
-
 }
 
 func (build *Build) updateStatus(status int) {
 	build.status = status
-	build.eventChan <- &BuildEvent{
-		commit: build.commit,
-		status: build.status,
+	buildEventChan <- &core.BuildEvent{
+		Commit: build.commit,
+		Status: build.status,
 	}
 }
 

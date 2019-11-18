@@ -9,16 +9,17 @@ type buildManager struct {
 	pendingPrBuilds   chan *core.PrEvent
 	pendingPushBuilds chan *core.PushEvent
 	runningBuilds     *hashmap.HashMap
-	buildFinishEvents chan *BuildEvent
+	buildFinishEvents chan *core.BuildEvent
 }
 
 var manager buildManager
 
 func InitBuildManager() {
+	initBuildEventAgent()
 	manager = buildManager{
 		pendingPrBuilds:   make(chan *core.PrEvent, 100),
 		pendingPushBuilds: make(chan *core.PushEvent, 100),
-		buildFinishEvents: make(chan *BuildEvent, 100),
+		buildFinishEvents: make(chan *core.BuildEvent, 100),
 		runningBuilds:     &hashmap.HashMap{},
 	}
 
@@ -33,9 +34,9 @@ func runBuildManager() {
 		case pr := <-manager.pendingPrBuilds:
 			runPrBuild(pr)
 		case buildFinish := <-manager.buildFinishEvents:
-			_, ok := manager.runningBuilds.GetStringKey(buildFinish.commit)
+			_, ok := manager.runningBuilds.GetStringKey(buildFinish.Commit)
 			if ok {
-				manager.runningBuilds.Del(buildFinish.commit)
+				manager.runningBuilds.Del(buildFinish.Commit)
 			}
 		}
 	}

@@ -1,0 +1,12 @@
+Short term:
+1. Test
+2. Frontend
+3. Deployment Script
+4. Finish WebSocket
+
+Middle term:
+1. More customizable build config
+2. Replace build cycle scripts with Golang
+3. Advanced machine manager, optimize instance utilization
+4. Database
+5. Build output compression

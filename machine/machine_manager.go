@@ -1,6 +1,9 @@
 package machine
 
-import "github.com/cornelk/hashmap"
+import (
+	"github.com/cornelk/hashmap"
+	"github.com/google/uuid"
+)
 
 type machineManager struct {
 	machines        *hashmap.HashMap
@@ -12,7 +15,8 @@ var manager machineManager
 
 type MachineRequest struct {
 	Op                int
-	MachineChan       chan *Machine
+	CreateMachineChan chan *Machine
+	CreateMachineName string
 	DeleteMachineName string
 	DeleteFinishChan  chan bool
 }
@@ -43,15 +47,17 @@ func runMachineManager() {
 func handleReq(req *MachineRequest) {
 	switch req.Op {
 	case opCreateMachine:
-		go createMachine(req.MachineChan)
+		go createMachine(req.CreateMachineName, req.CreateMachineChan)
 	case opDeleteMachine:
 		go deleteMachine(req.DeleteMachineName, req.DeleteFinishChan)
 	}
 }
 
-func createMachine(machineChan chan *Machine) {
-	machine := newMachine()
-	manager.machines.Set(machine.name, machine)
+func createMachine(machineName string, machineChan chan *Machine) {
+	machine := newMachine(machineName)
+	if machine != nil {
+		manager.machines.Set(machine.Name, machine)
+	}
 	machineChan <- machine
 }
 
@@ -64,12 +70,14 @@ func deleteMachine(deleteMachineName string, deleteFinishChan chan bool) {
 	}
 }
 
-func RequestCreateMachine() (machineChan chan *Machine) {
+func RequestCreateMachine() (machineName string, machineChan chan *Machine) {
 	machineChan = make(chan *Machine)
+	machineName = uuid.New().String()
 	manager.machineRequests <- &MachineRequest{Op: opCreateMachine,
-		MachineChan: machineChan,
+		CreateMachineName: machineName,
+		CreateMachineChan: machineChan,
 	}
-	return machineChan
+	return
 }
 
 func RequestDeleteMachine(deleteMachineName string) (finishChan chan bool) {
