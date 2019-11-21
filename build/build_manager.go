@@ -81,9 +81,9 @@ func runPrBuild(pr *core.PrEvent) {
 			prevBuild.(*Build).sendCancel()
 		}
 	}
-	manager.runningBuilds.Set(pr.PullRequest.Head.Sha, &newBuildParam{
+	manager.runningBuilds.Set(pr.PullRequest.Head.Sha, newBuild(&newBuildParam{
 		repo:   pr.PullRequest.Head.Repo.HtmlUrl,
 		branch: pr.PullRequest.Head.Ref,
 		commit: pr.PullRequest.Head.Sha,
-	})
+	}))
 }

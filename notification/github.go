@@ -26,7 +26,9 @@ func notifyGithub(event *core.BuildEvent, status string) {
 	request := gorequest.New()
 	githubUrl := fmt.Sprintf("https://api.github.com/repos/%v/statuses/%v", config.RepoName, event.Commit)
 	rfciUrl := fmt.Sprintf("%v/build/%v", config.Config.ReallyfastciUrl, event.Commit)
-	_, _, errs := request.Post(githubUrl).
+	log.Printf("githubUrl: %v", githubUrl)
+	log.Printf("rfciUrl: %v", rfciUrl)
+	resp, body, errs := request.Post(githubUrl).
 		Set("Authorization", fmt.Sprintf("token %v", config.Config.GithubToken)).
 		Set("Accept", "application/vnd.github.antiope-preview+json").
 		Send(fmt.Sprintf(`{"state":"%v","target_url":"%v","context":"reallyfastci"}`, status, rfciUrl)).
@@ -34,6 +36,10 @@ func notifyGithub(event *core.BuildEvent, status string) {
 	if len(errs) > 0 {
 		log.Printf("Error updating github status: %+v", errs)
 	} else {
-		log.Printf("Successfully updating github status")
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			log.Printf("Successfully updating github status")
+		} else {
+			log.Printf("Error updating github status: %+v", body)
+		}
 	}
 }

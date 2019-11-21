@@ -41,8 +41,8 @@ func newBuild(param *newBuildParam) *Build {
 
 func (build *Build) run() {
 	for {
-		switch {
-		case build.status == core.BuildQueued:
+		switch build.status {
+		case core.BuildQueued:
 			machineName, machineChan := machine.RequestCreateMachine()
 			select {
 			case <-build.cancel:
@@ -55,9 +55,10 @@ func (build *Build) run() {
 					build.updateStatus(core.BuildMachineStarted)
 				} else {
 					build.updateStatus(core.BuildFailed)
+					return
 				}
 			}
-		case build.status == core.BuildMachineStarted:
+		case core.BuildMachineStarted:
 			errChan := build.machine.CloneRepo(build.repo, build.branch, build.commit)
 			select {
 			case <-build.cancel:
@@ -69,9 +70,10 @@ func (build *Build) run() {
 					build.updateStatus(core.BuildRepoCloned)
 				} else {
 					build.updateStatus(core.BuildFailed)
+					return
 				}
 			}
-		case build.status == core.BuildRepoCloned:
+		case core.BuildRepoCloned:
 			errChan := build.machine.CopyBuildScript()
 			select {
 			case <-build.cancel:
@@ -83,9 +85,10 @@ func (build *Build) run() {
 					build.updateStatus(core.BuildScriptCopied)
 				} else {
 					build.updateStatus(core.BuildFailed)
+					return
 				}
 			}
-		case build.status == core.BuildScriptCopied:
+		case core.BuildScriptCopied:
 			errChan := build.machine.RunBuild(build.commit)
 			select {
 			case <-build.cancel:

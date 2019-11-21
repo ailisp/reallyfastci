@@ -1,6 +1,6 @@
-reallyfastci_url: localhost
+reallyfastci_url: http://localhost:1323
 github_token: abcdefg
-repo_url: https://github.com/ailisp/reallyfastci
+repo_url: https://github.com/ailisp/gcbapp-buildconfig-example
 push_trigger_branches: ["master"]
 machine:
     max_machines: 10
