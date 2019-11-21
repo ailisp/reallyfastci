@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+cd nearcore
+cargo build --workspace
+cargo test --workspace

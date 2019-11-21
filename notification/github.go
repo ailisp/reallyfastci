@@ -25,7 +25,7 @@ func NotifyBuildStatusGithub(event *core.BuildEvent) {
 func notifyGithub(event *core.BuildEvent, status string) {
 	request := gorequest.New()
 	githubUrl := fmt.Sprintf("https://api.github.com/repos/%v/statuses/%v", config.RepoName, event.Commit)
-	rfciUrl := fmt.Sprintf("%v/build/%v", config.Config.ReallyFastCiUrl, event.Commit)
+	rfciUrl := fmt.Sprintf("%v/build/%v", config.Config.ReallyfastciUrl, event.Commit)
 	_, _, errs := request.Post(githubUrl).
 		Set("Authorization", fmt.Sprintf("token %v", config.Config.GithubToken)).
 		Set("Accept", "application/vnd.github.antiope-preview+json").

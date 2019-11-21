@@ -1,0 +1,15 @@
+reallyfastci_url: localhost
+github_token: abcdefg
+repo_url: https://github.com/ailisp/reallyfastci
+push_trigger_branches: ["master"]
+machine:
+    max_machines: 10
+    machine_types: n1-standard-32
+    disk_size_gb: 50
+    image_project: ubuntu-os-cloud
+    image_family: ubuntu-1804-lts
+    zone: us-west2-a
+
+build:
+    script: ./build.sh
+    timeout_minutes: 30
