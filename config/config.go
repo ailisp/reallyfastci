@@ -29,8 +29,8 @@ var Config = struct {
 
 var RepoName string
 
-func LoadConfig() {
-	err := configor.Load(&Config, "./config.yaml")
+func LoadConfig(path string) {
+	err := configor.Load(&Config, path)
 	if err != nil {
 		log.Fatalf("config error: %v", err)
 	}

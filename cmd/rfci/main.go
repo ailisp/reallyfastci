@@ -21,7 +21,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 }
 
 func main() {
-	config.LoadConfig()
+	config.LoadConfig("./config.yaml")
 
 	machine.InitMachineManager()
 	build.InitBuildManager()

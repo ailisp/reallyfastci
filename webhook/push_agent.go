@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ailisp/reallyfastci/build"
+	"github.com/ailisp/reallyfastci/config"
 	"github.com/ailisp/reallyfastci/core"
 )
 
@@ -22,8 +23,10 @@ func runPushAgent() {
 		ref := strings.Split(event.Ref, "/")
 		if len(ref) > 0 {
 			branch := ref[len(ref)-1]
-			if branch == "master" || branch == "staging" {
-				build.QueuePushBuild(event)
+			for _, build_branch := range config.Config.PushTriggerBranches {
+				if build_branch == branch {
+					build.QueuePushBuild(event)
+				}
 			}
 		}
 	}
