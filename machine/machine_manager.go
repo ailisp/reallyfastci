@@ -1,12 +1,16 @@
 package machine
 
 import (
+	"fmt"
+
+	"github.com/ailisp/reallyfastci/config"
 	"github.com/cornelk/hashmap"
 	"github.com/google/uuid"
 )
 
 type machineManager struct {
-	machines        *hashmap.HashMap
+	runningMachines *hashmap.HashMap
+	idleMachines    chan *Machine
 	machineRequests chan *MachineRequest
 	stopChan        chan bool
 }
@@ -14,20 +18,20 @@ type machineManager struct {
 var manager machineManager
 
 type MachineRequest struct {
-	Op                int
-	CreateMachineChan chan *Machine
-	CreateMachineName string
-	DeleteMachineName string
-	DeleteFinishChan  chan bool
+	Op int
+
+	RequestId uuid.UUID
+
+	RequestMachineChan chan *Machine
 }
 
 const (
-	opCreateMachine = iota
-	opDeleteMachine
+	opRequestMachine = iota
+	opReleaseMachine
 )
 
 func InitMachineManager() {
-	manager.machines = &hashmap.HashMap{}
+	manager.runningMachines = &hashmap.HashMap{}
 	manager.machineRequests = make(chan *MachineRequest, 100)
 	manager.stopChan = make(chan bool)
 	go runMachineManager()
@@ -40,51 +44,60 @@ func runMachineManager() {
 			break
 		case req := <-manager.machineRequests:
 			handleReq(req)
+		default:
+			examineMachines()
 		}
 	}
 }
 
 func handleReq(req *MachineRequest) {
 	switch req.Op {
-	case opCreateMachine:
-		go createMachine(req.CreateMachineName, req.CreateMachineChan)
-	case opDeleteMachine:
-		go deleteMachine(req.DeleteMachineName, req.DeleteFinishChan)
+	case opRequestMachine:
+		if _, ok := manager.runningMachines.Get(req.RequestId); ok {
+			return
+		}
+		manager.runningMachines.Set(req.RequestId, &Machine{})
+		go handleRequestMachine(req.RequestId, req.RequestMachineChan)
+	case opReleaseMachine:
+		go handleDeleteMachine(req.RequestId)
 	}
 }
 
-func createMachine(machineName string, machineChan chan *Machine) {
-	machine := newMachine(machineName)
+func handleRequestMachine(requestId uuid.UUID, machineChan chan *Machine) {
+	machine := <-manager.idleMachines
 	if machine != nil {
-		manager.machines.Set(machine.Name, machine)
+		manager.runningMachines.Set(requestId, machine)
 	}
 	machineChan <- machine
 }
 
-func deleteMachine(deleteMachineName string, deleteFinishChan chan bool) {
-	machine, ok := manager.machines.GetStringKey(deleteMachineName)
+func handleDeleteMachine(requestId uuid.UUID) {
+	machine, ok := manager.runningMachines.Get(requestId)
 	if ok {
-		manager.machines.Del(deleteMachineName)
 		machine.(*Machine).delete()
-		deleteFinishChan <- true
+		manager.runningMachines.Del(requestId)
 	}
 }
 
-func RequestCreateMachine() (machineName string, machineChan chan *Machine) {
+func RequestMachine(requestId uuid.UUID) (machineChan chan *Machine) {
 	machineChan = make(chan *Machine)
-	machineName = uuid.New().String()
-	manager.machineRequests <- &MachineRequest{Op: opCreateMachine,
-		CreateMachineName: machineName,
-		CreateMachineChan: machineChan,
+	manager.machineRequests <- &MachineRequest{Op: opRequestMachine,
+		RequestId:          requestId,
+		RequestMachineChan: machineChan,
 	}
 	return
 }
 
-func RequestDeleteMachine(deleteMachineName string) (finishChan chan bool) {
-	finishChan = make(chan bool)
-	manager.machineRequests <- &MachineRequest{Op: opDeleteMachine,
-		DeleteFinishChan:  finishChan,
-		DeleteMachineName: deleteMachineName,
+func ReleaseMachine(requestId uuid.UUID) {
+	manager.machineRequests <- &MachineRequest{Op: opReleaseMachine,
+		RequestId: requestId,
 	}
-	return finishChan
+}
+
+func examineMachines() {
+	idleMachines := uint64(len(manager.idleMachines))
+	runningMachines := uint64(manager.runningMachines.Len())
+	if idleMachines < config.Config.Machine.IdleMachines && idleMachines+runningMachines < config.Config.Machine.MaxMachines {
+		manager.idleMachines <- newMachine(fmt.Sprintf("%v-%v", config.Config.Machine.Prefix, uuid.New().String()))
+	}
 }

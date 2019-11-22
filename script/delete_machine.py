@@ -3,7 +3,7 @@ import argparse
 from rc import gcloud
 
 def delete_machine(*, name):
-    machine = gcloud.get('name')
+    machine = gcloud.get(name)
     if machine:
         try:
             machine.delete()
@@ -15,4 +15,4 @@ if __name__ == "__main__":
     parser.add_argument('--name', required=True,
                         help='Name of the gcloud machine to delete')
     args = parser.parse_args()
-    delete_machine(**args)
+    delete_machine(**vars(args))

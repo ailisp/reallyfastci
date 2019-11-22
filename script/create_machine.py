@@ -36,4 +36,4 @@ if __name__ == "__main__":
                         help='Zone of the gcloud machine')
 
     args = parser.parse_args()
-    create_machine(**args)
+    create_machine(**vars(args))

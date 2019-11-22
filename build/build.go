@@ -3,6 +3,7 @@ package build
 import (
 	"github.com/ailisp/reallyfastci/core"
 	"github.com/ailisp/reallyfastci/machine"
+	"github.com/google/uuid"
 )
 
 type Build struct {
@@ -40,13 +41,14 @@ func newBuild(param *newBuildParam) *Build {
 }
 
 func (build *Build) run() {
+	requestId := uuid.New()
 	for {
 		switch build.status {
 		case core.BuildQueued:
-			machineName, machineChan := machine.RequestCreateMachine()
+			machineChan := machine.RequestMachine(requestId)
 			select {
 			case <-build.cancel:
-				machine.RequestDeleteMachine(machineName)
+				machine.ReleaseMachine(requestId)
 				build.updateStatus(core.BuildCancelled)
 				return
 			case m := <-machineChan:
@@ -62,7 +64,7 @@ func (build *Build) run() {
 			errChan := build.machine.CloneRepo(build.repo, build.branch, build.commit)
 			select {
 			case <-build.cancel:
-				machine.RequestDeleteMachine(build.machine.Name)
+				machine.ReleaseMachine(requestId)
 				build.updateStatus(core.BuildCancelled)
 				return
 			case err := <-errChan:
@@ -77,7 +79,7 @@ func (build *Build) run() {
 			errChan := build.machine.CopyBuildScript()
 			select {
 			case <-build.cancel:
-				machine.RequestDeleteMachine(build.machine.Name)
+				machine.ReleaseMachine(requestId)
 				build.updateStatus(core.BuildCancelled)
 				return
 			case err := <-errChan:
@@ -92,7 +94,7 @@ func (build *Build) run() {
 			errChan := build.machine.RunBuild(build.commit)
 			select {
 			case <-build.cancel:
-				machine.RequestDeleteMachine(build.machine.Name)
+				machine.ReleaseMachine(requestId)
 				build.updateStatus(core.BuildCancelled)
 				return
 			case err := <-errChan:
