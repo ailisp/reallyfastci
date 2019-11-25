@@ -23,9 +23,11 @@ func runPushAgent() {
 		ref := strings.Split(event.Ref, "/")
 		if len(ref) > 0 {
 			branch := ref[len(ref)-1]
+			event.Branch = branch
 			for _, build_branch := range config.Config.PushTriggerBranches {
 				if build_branch == branch {
 					build.QueuePushBuild(event)
+					break
 				}
 			}
 		}

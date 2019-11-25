@@ -1,6 +1,8 @@
 package build
 
 import (
+	"log"
+
 	"github.com/ailisp/reallyfastci/core"
 	"github.com/ailisp/reallyfastci/notification"
 )
@@ -15,6 +17,7 @@ func initBuildEventAgent() {
 func runBuildEventAgent() {
 	for {
 		buildEvent := <-buildEventChan
+		log.Printf("Build event: %+v", buildEvent)
 		notification.NotifyBuildStatusGithub(buildEvent)
 		notification.NotifyWebSocket(buildEvent)
 		if buildEvent.Status >= core.BuildSucceed {

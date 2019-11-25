@@ -32,7 +32,8 @@ type Repository struct {
 }
 
 type PushEvent struct {
-	Ref    string     `json:"ref" validate:"required"`
+	Ref    string `json:"ref" validate:"required"`
+	Branch string
 	Before string     `json:"before" validate:"required"`
 	After  string     `json:"after" validate:"required"`
 	Repo   Repository `json:"repository" validate:"required"`
