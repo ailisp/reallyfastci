@@ -11,23 +11,29 @@ type Machine struct {
 	Name string
 }
 
-func newMachine(machineName string) (machine *Machine) {
-	machine = &Machine{
+func newMachine(machineName string, failChan chan bool) (machineChan chan *Machine) {
+	machine := &Machine{
 		Name: machineName,
 	}
+	machineChan = make(chan *Machine)
 
-	err := <-script.Run("create_machine.py",
-		"--name", machine.Name,
-		"--machine_type", config.Config.Machine.MachineType,
-		"--disk_size", strconv.FormatUint(config.Config.Machine.DiskSizeGB, 10),
-		"--image_project", config.Config.Machine.ImageProject,
-		"--image_family", config.Config.Machine.ImageFamily,
-		"--zone", config.Config.Machine.Zone)
-	if err != nil {
-		return nil
-	} else {
-		return machine
-	}
+	go func() {
+		err := <-script.Run("create_machine.py",
+			"--name", machine.Name,
+			"--machine_type", config.Config.Machine.MachineType,
+			"--disk_size", strconv.FormatUint(config.Config.Machine.DiskSizeGB, 10),
+			"--image_project", config.Config.Machine.ImageProject,
+			"--image_family", config.Config.Machine.ImageFamily,
+			"--zone", config.Config.Machine.Zone)
+		if err != nil {
+			machineChan <- nil
+			failChan <- true
+		} else {
+			machineChan <- machine
+		}
+	}()
+
+	return
 }
 
 func (machine *Machine) delete() error {

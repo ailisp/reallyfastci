@@ -57,6 +57,7 @@ func (build *Build) run() {
 					build.updateStatus(core.BuildMachineStarted)
 				} else {
 					build.updateStatus(core.BuildFailed)
+					machine.ReleaseMachine(requestId)
 					return
 				}
 			}
@@ -72,6 +73,7 @@ func (build *Build) run() {
 					build.updateStatus(core.BuildRepoCloned)
 				} else {
 					build.updateStatus(core.BuildFailed)
+					machine.ReleaseMachine(requestId)
 					return
 				}
 			}
@@ -87,6 +89,7 @@ func (build *Build) run() {
 					build.updateStatus(core.BuildScriptCopied)
 				} else {
 					build.updateStatus(core.BuildFailed)
+					machine.ReleaseMachine(requestId)
 					return
 				}
 			}
@@ -100,9 +103,11 @@ func (build *Build) run() {
 			case err := <-errChan:
 				if err == nil {
 					build.updateStatus(core.BuildSucceed)
+					machine.ReleaseMachine(requestId)
 					return
 				} else {
 					build.updateStatus(core.BuildFailed)
+					machine.ReleaseMachine(requestId)
 					return
 				}
 			}

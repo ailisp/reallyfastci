@@ -5,7 +5,8 @@ push_trigger_branches: ["master"]
 machine:
     prefix: reallyfastci-runner
     max_machines: 10
-    machine_type: n1-standard-32
+    idle_machines: 2
+    machine_type: n1-standard-2
     disk_size_gb: 50
     image_project: ubuntu-os-cloud
     image_family: ubuntu-1804-lts

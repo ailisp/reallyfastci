@@ -22,4 +22,4 @@ clean:
 test:
 	go test ./...
 
-.PHONY: all test clean go python
+.PHONY: all test clean go python config
