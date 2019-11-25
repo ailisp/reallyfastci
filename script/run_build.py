@@ -14,7 +14,7 @@ def run_build(*, name, commit, local_path):
     oc = open(f'../build/{commit}/output_combined.log', 'w')
     ec = open(f'../build/{commit}/exitcode', 'w')
     ex = []
-    
+
     def stdout_handler(line):
         stdo.write(line)
         oc.write(line)
@@ -27,11 +27,12 @@ def run_build(*, name, commit, local_path):
         ec.write(exitcode)
         ex.append(exitcode)
         oc.write(f'Exit Code: {exitcode}')
-    
+
     handle_stream(machine.run_stream('bash', input=f'''
 ./{local_path.split('/')[-1]}
 ''', stdout_handler=stdout_handler, stderr_handler=stderr_handler, exit_handler=exit_handler))
     exit(ex[0])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -42,4 +43,4 @@ if __name__ == "__main__":
     parser.add_argument('--local_path', required=True,
                         help='Local path of build script')
     args = parser.parse_args()
-    run_build(**args)
+    run_build(**vars(args))

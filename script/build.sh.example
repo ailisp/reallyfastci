@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
-cd nearcore
-cargo build --workspace
-cargo test --workspace
+# cd nearcore
+# cargo build --workspace
+# cargo test --workspace
+echo "print to stdout"
+echo "print to stderr" 1>&2
+sleep 5
+echo "finished"
