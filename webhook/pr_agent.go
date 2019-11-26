@@ -19,6 +19,8 @@ func runPrAgent() {
 	for {
 		event := <-prs
 		fmt.Printf("Received a pull request event: %+v\n", event)
-		build.QueuePrBuild(event)
+		if event.Action != "closed" {
+			build.QueuePrBuild(event)
+		}
 	}
 }
