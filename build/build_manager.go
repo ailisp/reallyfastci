@@ -36,7 +36,7 @@ func runBuildManager() {
 		case pr := <-manager.pendingPrBuilds:
 			runPrBuild(pr)
 		case buildFinish := <-manager.buildFinishEvents:
-			log.Printf("Build finsh event received: %+v, remove build from running builds", buildFinish)
+			log.Printf("Build finish event received: %+v, remove build from running builds", buildFinish)
 			manager.runningBuilds.Del(buildFinish.Commit)
 		}
 	}
