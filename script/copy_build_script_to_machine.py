@@ -12,6 +12,11 @@ def copy_build_script_to_machine(*, name, local_path):
     if p.returncode != 0:
         exit(1)
 
+    remote_path = local_path.split('/')[-1]
+
+    p = machine.run(f'chmod +x {remote_path}')
+    exit(p.returncode)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

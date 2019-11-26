@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 import argparse
-from rc import gcloud, run
+from rc import gcloud, run, handle_stream
 
 
 def run_build(*, name, commit, local_path):
-    machine = gcloud.get('machine')
+    machine = gcloud.get(name)
     if machine is None:
         exit(1)
-    run(['mkdir', '-p', f'../build/{commit}'])
+    run(['mkdir', '-p', f'build/{commit}'])
 
-    stdo = open(f'../build/{commit}/stdout.log', 'w')
-    stde = open(f'../build/{commit}/stderr.log', 'w')
-    oc = open(f'../build/{commit}/output_combined.log', 'w')
-    ec = open(f'../build/{commit}/exitcode', 'w')
-    ex = []
+    stdo = open(f'build/{commit}/stdout.log', 'w')
+    stde = open(f'build/{commit}/stderr.log', 'w')
+    oc = open(f'build/{commit}/output_combined.log', 'w')
+    ec = open(f'build/{commit}/exitcode', 'w')
 
     def stdout_handler(line):
         stdo.write(line)
@@ -24,14 +23,15 @@ def run_build(*, name, commit, local_path):
         oc.write(line)
 
     def exit_handler(exitcode):
-        ec.write(exitcode)
-        ex.append(exitcode)
+        ec.write(str(exitcode))
         oc.write(f'Exit Code: {exitcode}')
 
-    handle_stream(machine.run_stream('bash', input=f'''
+    q, p = machine.run_stream('bash', input=f'''
 ./{local_path.split('/')[-1]}
-''', stdout_handler=stdout_handler, stderr_handler=stderr_handler, exit_handler=exit_handler))
-    exit(ex[0])
+''')
+    handle_stream(q, stdout_handler=stdout_handler,
+                  stderr_handler=stderr_handler, exit_handler=exit_handler)
+    exit(p.returncode)
 
 
 if __name__ == "__main__":

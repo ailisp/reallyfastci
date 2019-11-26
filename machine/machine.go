@@ -45,6 +45,7 @@ func (machine *Machine) CloneRepo(url string, branch string, commit string) (err
 	return script.Run("clone_repo_on_machine.py",
 		"--name", machine.Name,
 		"--url", url,
+		"--repo", config.RepoName,
 		"--branch", branch,
 		"--commit", commit)
 }

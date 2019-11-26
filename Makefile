@@ -12,7 +12,7 @@ python:
 	cd target && pipenv install
 
 config:
-	mkdir -p target
+	mkdir -p target/build
 	cp config/config.yaml.example target/config.yaml
 	cp script/build.sh.example target/build.sh
 
