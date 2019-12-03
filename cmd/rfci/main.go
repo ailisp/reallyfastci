@@ -34,6 +34,7 @@ func main() {
 	e.Use(middleware.CORS())
 	e.POST("/github", webhook.GithubWebhook)
 	e.Static("/", "./public")
+	e.Static("/build", "build")
 	e.GET("/ws", notification.WebSocket)
 	e.Logger.Fatal(e.Start(":1323"))
 }
