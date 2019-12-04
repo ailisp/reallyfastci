@@ -94,3 +94,20 @@ func runPrBuild(pr *core.PrEvent) {
 		commit: pr.PullRequest.Head.Sha,
 	}))
 }
+
+func RunningBuilds() (builds *hashmap.HashMap) {
+	builds = &hashmap.HashMap{}
+	for kv := range manager.runningBuilds.Iter() {
+		builds.Set(kv.Key, nil)
+	}
+	return
+}
+
+func GetRunningBuild(commit string) (buildStatus int) {
+	build, ok := manager.runningBuilds.GetStringKey(commit)
+	if ok {
+		return build.(*Build).status
+	} else {
+		return core.BuildNotRunning
+	}
+}

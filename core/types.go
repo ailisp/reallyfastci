@@ -54,4 +54,28 @@ const (
 	BuildSucceed
 	BuildFailed
 	BuildCancelled
+
+	BuildNotRunning = -1
 )
+
+func BuildStatusStr(status int) (str string) {
+	switch status {
+	case BuildQueued:
+		str = "Queued"
+	case BuildMachineStarted:
+		str = "Machine Started"
+	case BuildRepoCloned:
+		str = "Repo Cloned"
+	case BuildScriptCopied:
+		str = "Script Copied"
+	case BuildSucceed:
+		str = "Succeed"
+	case BuildFailed:
+		str = "Failed"
+	case BuildCancelled:
+		str = "Cancelled"
+	default:
+		str = "Not Running"
+	}
+	return
+}

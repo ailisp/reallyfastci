@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	"github.com/ailisp/reallyfastci/api"
 	"github.com/ailisp/reallyfastci/build"
 	"github.com/ailisp/reallyfastci/config"
 	"github.com/ailisp/reallyfastci/machine"
@@ -33,8 +34,9 @@ func main() {
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Use(middleware.CORS())
 	e.POST("/github", webhook.GithubWebhook)
-	e.Static("/", "./public")
-	e.Static("/build", "build")
+	e.GET("/api/build/:commit", api.Build)
+	e.GET("/api/build", api.Index)
 	e.GET("/ws", notification.WebSocket)
+	e.Static("/", "./public")
 	e.Logger.Fatal(e.Start(":1323"))
 }
