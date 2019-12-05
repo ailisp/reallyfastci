@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/ailisp/reallyfastci/build"
 	"github.com/ailisp/reallyfastci/core"
+	"github.com/hpcloud/tail"
 	"github.com/labstack/echo/v4"
 )
 
@@ -48,5 +50,36 @@ func Build(c echo.Context) (err error) {
 		} else {
 			return c.JSON(http.StatusNotFound, nil)
 		}
+	}
+}
+
+func RunningOutput(c echo.Context) (err error) {
+	commit := c.Param("commit")
+	exitCodeFilename := fmt.Sprintf("build/%v/exitcode", commit)
+	outputFilename := fmt.Sprintf("build/%v/output_combined.log", commit)
+	if _, err := os.Stat(outputFilename); err == nil {
+		c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		c.Response().WriteHeader(http.StatusOK)
+		outputTail, _ := tail.TailFile(outputFilename, tail.Config{
+			Follow: true, ReOpen: true, MustExist: false,
+			Logger: tail.DiscardingLogger,
+		})
+		exitcodeTail, _ := tail.TailFile(exitCodeFilename, tail.Config{
+			Logger:    tail.DiscardingLogger,
+			MustExist: false, ReOpen: true, Follow: true,
+		})
+		for {
+			select {
+			case line := <-outputTail.Lines:
+				if err := json.NewEncoder(c.Response()).Encode(line); err != nil {
+					return err
+				}
+				c.Response().Flush()
+			case <-exitcodeTail.Lines:
+				return nil
+			}
+		}
+	} else {
+		return c.JSON(http.StatusNotFound, nil)
 	}
 }

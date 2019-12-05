@@ -1,6 +1,11 @@
 package main
 
 import (
+	"context"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -34,9 +39,28 @@ func main() {
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Use(middleware.CORS())
 	e.POST("/github", webhook.GithubWebhook)
+	e.GET("/api/build/:commit/output", api.RunningOutput)
 	e.GET("/api/build/:commit", api.Build)
 	e.GET("/api/build", api.Index)
 	e.GET("/ws", notification.WebSocket)
 	e.Static("/", "./public")
-	e.Logger.Fatal(e.Start(":1323"))
+
+	// Start server
+	go func() {
+		if err := e.Start(":1323"); err != nil {
+			e.Logger.Info("shutting down the server")
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 10 seconds.
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }

@@ -2,6 +2,7 @@ package machine
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -56,7 +57,7 @@ func runMachineManager() {
 	for {
 		select {
 		case _ = <-manager.stopChan:
-			break
+			return
 		case req := <-manager.machineRequests:
 			handleReq(req)
 		case <-ticker.C:
@@ -178,6 +179,7 @@ func ReleaseMachine(requestId uuid.UUID) {
 func startIdleMachines() {
 	idleMachines := len(manager.idleMachines)
 	for i := 0; i < manager.maxIdleMachines-idleMachines; i++ {
+		log.Printf("Start idle machine")
 		machineChan := manager.tryNewMachine()
 		if machineChan != nil {
 			manager.idleMachines <- machineChan
