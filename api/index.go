@@ -21,7 +21,7 @@ func Index(c echo.Context) (err error) {
 	}
 	runningBuilds := build.RunningBuilds()
 
-	var finishedBuilds []string
+	finishedBuilds := []string{}
 
 	for _, dir := range outputBuilds {
 		buildCommit := dir.Name()
@@ -31,7 +31,7 @@ func Index(c echo.Context) (err error) {
 		}
 	}
 
-	var runningBuildsArray []string
+	runningBuildsArray := []string{}
 	for build := range runningBuilds.Iter() {
 		runningBuildsArray = append(runningBuildsArray, build.Key.(string))
 	}
