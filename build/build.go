@@ -2,9 +2,14 @@ package build
 
 import (
 	"fmt"
+	"log"
+	"time"
+
+	"github.com/ailisp/reallyfastci/config"
 	"github.com/ailisp/reallyfastci/core"
 	"github.com/ailisp/reallyfastci/machine"
 	"github.com/google/uuid"
+
 	"os"
 )
 
@@ -40,6 +45,11 @@ func newBuild(param *newBuildParam) *Build {
 	build.updateStatus(core.BuildQueued)
 
 	go build.run()
+	go func() {
+		<-time.After(time.Duration(config.Config.Build.TimeoutMinutes) * time.Minute)
+		build.sendCancel()
+		log.Printf("cancel build %v because of timeout", build.commit)
+	}()
 	return build
 }
 
@@ -123,6 +133,12 @@ func (build *Build) updateStatus(status int) {
 	buildEventChan <- &core.BuildEvent{
 		Commit: build.commit,
 		Status: build.status,
+	}
+	if status == core.BuildCancelled {
+		os.MkdirAll(fmt.Sprintf("build/%v", build.commit), os.ModePerm)
+		f, _ := os.Create(fmt.Sprintf("build/%v/exitcode", commit))
+		f.WriteString(fmt.Sprintf("%v\n", -1))
+		f.Close()
 	}
 }
 

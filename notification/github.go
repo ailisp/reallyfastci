@@ -25,7 +25,7 @@ func NotifyBuildStatusGithub(event *core.BuildEvent) {
 func notifyGithub(event *core.BuildEvent, status string) {
 	request := gorequest.New()
 	githubUrl := fmt.Sprintf("https://api.github.com/repos/%v/statuses/%v", config.RepoName, event.Commit)
-	rfciUrl := fmt.Sprintf("%v/build/%v", config.Config.ReallyfastciUrl, event.Commit)
+	rfciUrl := fmt.Sprintf("%v/#build/%v", config.Config.ReallyfastciUrl, event.Commit)
 	log.Printf("githubUrl: %v", githubUrl)
 	log.Printf("rfciUrl: %v", rfciUrl)
 	resp, body, errs := request.Post(githubUrl).
