@@ -7,24 +7,26 @@ def run_build(*, name, commit, local_path):
     machine = gcloud.get(name)
     if machine is None:
         exit(1)
-    run(['mkdir', '-p', f'build/{commit}'])
-
-    stdo = open(f'build/{commit}/stdout.log', 'w')
-    stde = open(f'build/{commit}/stderr.log', 'w')
-    oc = open(f'build/{commit}/output_combined.log', 'w')
-    ec = open(f'build/{commit}/exitcode', 'w')
+    run(['rm', '-rf', f'build/{commit}'])
+    run(['mkdir', f'build/{commit}'])
 
     def stdout_handler(line):
-        stdo.write(line)
-        oc.write(line)
+        with open(f'build/{commit}/stdout.log', 'a') as stdo:
+            with open(f'build/{commit}/output_combined.log', 'a') as oc:
+                stdo.write(line)
+                oc.write(line)
 
     def stderr_handler(line):
-        stde.write(line)
-        oc.write(line)
+        with open(f'build/{commit}/stderr.log', 'a') as stde:
+            with open(f'build/{commit}/output_combined.log', 'a') as oc:
+                stde.write(line)
+                oc.write(line)
 
     def exit_handler(exitcode):
-        ec.write(str(exitcode))
-        oc.write(f'Exit Code: {exitcode}')
+        with open(f'build/{commit}/exitcode', 'w') as ec:
+            with open(f'build/{commit}/output_combined.log', 'a') as oc:
+                ec.write(f'{exitcode}\n')
+                oc.write(f'Exit Code: {exitcode}\n')
 
     q, p = machine.run_stream('bash', input=f'''
 ./{local_path.split('/')[-1]}

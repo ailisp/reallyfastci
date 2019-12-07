@@ -5,4 +5,9 @@
 echo "print to stdout"
 echo "print to stderr" 1>&2
 sleep 5
+for i in `seq 1 100`
+do
+    echo "progress $i"
+    sleep 2
+done
 echo "finished"

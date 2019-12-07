@@ -1,9 +1,11 @@
 package build
 
 import (
+	"fmt"
 	"github.com/ailisp/reallyfastci/core"
 	"github.com/ailisp/reallyfastci/machine"
 	"github.com/google/uuid"
+	"os"
 )
 
 type Build struct {
@@ -34,6 +36,7 @@ func newBuild(param *newBuildParam) *Build {
 
 		cancel: make(chan bool),
 	}
+	os.RemoveAll(fmt.Sprintf("build/%v", build.commit))
 	build.updateStatus(core.BuildQueued)
 
 	go build.run()
