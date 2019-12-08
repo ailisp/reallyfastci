@@ -1,5 +1,6 @@
 import app, { Component, on } from 'apprun';
 import { build } from '../api';
+declare var defaultBasePath;
 
 interface State {
     commit: string,
@@ -37,15 +38,33 @@ class BuildComponent extends Component {
                     return a
                 } else {
                     this.run('running-build-log', commit)
+                    return { ...state, commit, status }
                 }
             } catch ({ errors }) {
-                return { ...state, errors }
+                return { ...state, commit, errors }
             }
         }
     }
 
-    @on('running-build-log') runningBuildLog = async (state, commit) => {
 
+    @on('running-build-log') runningBuildLog = async (state, commit) => {
+        const fetchedResource = await fetch(`${defaultBasePath}/api/build/${commit}/output`)
+        const reader = await fetchedResource.body.getReader()
+        const decoder = new TextDecoder('utf-8');
+        const _this = this;
+
+        reader.read().then(function processText({ done, value }) {
+            if (done) {
+                return;
+            }
+
+            _this.run('new-output', decoder.decode(value));
+            reader.read().then(processText);
+        })
+    }
+
+    @on('new-output') newOutput = async (state, newLog) => {
+        return { ...state, output_combined: state.output_combined + newLog }
     }
 }
 
