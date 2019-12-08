@@ -33,12 +33,19 @@ class BuildComponent extends Component {
         if (commit != "") {
             try {
                 let a = { ...state, ...await build.build(commit), commit };
-                console.log(a)
-                return a
+                if (a.exitcode != null) {
+                    return a
+                } else {
+                    this.run('running-build-log', commit)
+                }
             } catch ({ errors }) {
                 return { ...state, errors }
             }
         }
+    }
+
+    @on('running-build-log') runningBuildLog = async (state, commit) => {
+
     }
 }
 

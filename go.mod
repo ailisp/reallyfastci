@@ -16,6 +16,7 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stvp/go-toml-config v0.0.0-20170523163211-314328849d78
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	golang.org/x/text v0.3.2
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	moul.io/http2curl v1.0.0 // indirect

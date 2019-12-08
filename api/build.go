@@ -1,8 +1,8 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -58,7 +58,7 @@ func RunningOutput(c echo.Context) (err error) {
 	exitCodeFilename := fmt.Sprintf("build/%v/exitcode", commit)
 	outputFilename := fmt.Sprintf("build/%v/output_combined.log", commit)
 	if _, err := os.Stat(outputFilename); err == nil {
-		c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextPlainCharsetUTF8)
 		c.Response().WriteHeader(http.StatusOK)
 		outputTail, _ := tail.TailFile(outputFilename, tail.Config{
 			Follow: true, ReOpen: true, MustExist: false,
@@ -71,15 +71,14 @@ func RunningOutput(c echo.Context) (err error) {
 		for {
 			select {
 			case line := <-outputTail.Lines:
-				if err := json.NewEncoder(c.Response()).Encode(line); err != nil {
-					return err
-				}
+				io.WriteString(c.Response(), line.Text)
+				io.WriteString(c.Response(), "\n")
 				c.Response().Flush()
 			case <-exitcodeTail.Lines:
 				return nil
 			}
 		}
 	} else {
-		return c.JSON(http.StatusNotFound, nil)
+		return c.NoContent(http.StatusNotFound)
 	}
 }

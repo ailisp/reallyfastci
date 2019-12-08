@@ -136,7 +136,7 @@ func (build *Build) updateStatus(status int) {
 	}
 	if status == core.BuildCancelled {
 		os.MkdirAll(fmt.Sprintf("build/%v", build.commit), os.ModePerm)
-		f, _ := os.Create(fmt.Sprintf("build/%v/exitcode", commit))
+		f, _ := os.Create(fmt.Sprintf("build/%v/exitcode", build.commit))
 		f.WriteString(fmt.Sprintf("%v\n", -1))
 		f.Close()
 	}
