@@ -18,26 +18,53 @@ type buildStatus struct {
 	Status string `json:"status"`
 }
 
+type buildFinishedStatus struct {
+	Status   string `json:"status"`
+	ExitCode int    `json:"exitcode"`
+}
 type buildOutput struct {
 	Status         string `json:"status"`
 	OutputCombined string `json:"output_combined"`
 	ExitCode       int    `json:"exitcode"`
 }
 
-func Build(c echo.Context) (err error) {
+func BuildExitCode(c echo.Context) (err error) {
 	commit := c.Param("commit")
+	buildFinishedStatus := finishedBuildStatus(commit)
+	if buildFinishedStatus != nil {
+		return c.JSON(http.StatusOK, buildFinishedStatus)
+	}
+	return c.NoContent(http.StatusNotFound)
+}
+
+func finishedBuildStatus(commit string) *buildFinishedStatus {
 	exitCodeFilename := fmt.Sprintf("build/%v/exitcode", commit)
 	if _, err := os.Stat(exitCodeFilename); err == nil {
-		status := core.BuildStatusStr(core.BuildSucceed)
 		exitCodeContent, _ := ioutil.ReadFile(exitCodeFilename)
 		exitCode, _ := strconv.Atoi(string(exitCodeContent))
-		if exitCode != 0 {
+		status := core.BuildStatusStr(core.BuildSucceed)
+		if exitCode > 0 {
 			status = core.BuildStatusStr(core.BuildFailed)
+		} else if exitCode < 0 {
+			status = core.BuildStatusStr(core.BuildCancelled)
 		}
+		return &buildFinishedStatus{
+			Status:   status,
+			ExitCode: exitCode,
+		}
+	}
+	return nil
+}
+
+func Build(c echo.Context) (err error) {
+	commit := c.Param("commit")
+	buildFinishedStatus := finishedBuildStatus(commit)
+
+	if buildFinishedStatus != nil {
 		outputContent, _ := ioutil.ReadFile(fmt.Sprintf("build/%v/output_combined.log", commit))
 		return c.JSON(http.StatusOK, &buildOutput{
-			Status:         status,
-			ExitCode:       exitCode,
+			Status:         buildFinishedStatus.Status,
+			ExitCode:       buildFinishedStatus.ExitCode,
 			OutputCombined: string(outputContent),
 		})
 	} else {
@@ -46,7 +73,9 @@ func Build(c echo.Context) (err error) {
 			return c.JSON(http.StatusOK, &buildStatus{
 				Status: core.BuildStatusStr(status),
 			})
-			// Frontend need to GET /ws to listen for build change
+			// Frontend need to GET /ws to listen for build
+			// Frontend need to GET /output to get stream output
+			// Frontend need to GET /exitcode to get exitcode on /output done
 		} else {
 			return c.JSON(http.StatusNotFound, nil)
 		}

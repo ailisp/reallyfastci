@@ -18,10 +18,20 @@ export interface BuildResponse {
     exitcode?: number
 }
 
+export interface FinishedStatus {
+    status: string,
+    exitcode: number
+}
+
 export const index = {
     listbuild: () => get<ListBuildResponse>('/api/build')
 }
 
 export const build = {
-    build: (commit) => get<BuildResponse>(`/api/build/${commit}`)
+    build: (commit) => get<BuildResponse>(`/api/build/${commit}`),
+    finishedStatus: (commit) => get<FinishedStatus>(`/api/build/${commit}/exitcode`)
+}
+
+export const finshedStatus = {
+
 }

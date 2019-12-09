@@ -41,9 +41,10 @@ func main() {
 	e.POST("/github", webhook.GithubWebhook)
 	e.GET("/api/build/:commit/output", api.RunningOutput)
 	e.GET("/api/build/:commit", api.Build)
+	e.GET("/api/build/:commit/exitcode", api.BuildExitCode)
 	e.GET("/api/build", api.Index)
 	e.GET("/ws", notification.WebSocket)
-	e.Static("/", "./public")
+	e.Static("/", ".")
 
 	// Start server
 	go func() {

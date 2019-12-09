@@ -8,6 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-playground/validator/v10 v10.0.0
 	github.com/google/uuid v1.1.1
+	github.com/gorilla/websocket v1.4.1
 	github.com/hpcloud/tail v1.0.0
 	github.com/jinzhu/configor v1.1.1
 	github.com/labstack/echo/v4 v4.1.11

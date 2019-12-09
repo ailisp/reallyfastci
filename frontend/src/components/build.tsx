@@ -10,6 +10,8 @@ interface State {
 }
 
 class BuildComponent extends Component {
+    websocket: any;
+
     state: State = {
         commit: "",
         output_combined: "",
@@ -37,6 +39,7 @@ class BuildComponent extends Component {
                 if (a.exitcode != null) {
                     return a
                 } else {
+                    this.startWebSocket(commit)
                     this.run('running-build-log', commit)
                     return { ...state, commit, status }
                 }
@@ -44,6 +47,17 @@ class BuildComponent extends Component {
                 return { ...state, commit, errors }
             }
         }
+    }
+
+    startWebSocket = (commit) => {
+        this.websocket = new WebSocket(`${defaultBasePath}/ws`.replace('http', 'ws'));
+        this.websocket.onopen = (evt) => {
+            this.websocket.send("open")
+            console.log("websocket open");
+        }
+        this.websocket.onclose = (evt) => console.log("websocket close");
+        this.websocket.onmessage = (evt) => this.run('ws-msg', evt.data);
+        this.websocket.onerror = (evt: MessageEvent) => console.log("websocket error: " + evt.data);
     }
 
 
@@ -55,6 +69,8 @@ class BuildComponent extends Component {
 
         reader.read().then(function processText({ done, value }) {
             if (done) {
+                this.websocket.close()
+                _this.run('finished-status', commit)
                 return;
             }
 
@@ -63,8 +79,25 @@ class BuildComponent extends Component {
         })
     }
 
+    @on('finished-status') finishedStatus = async (state, commit) => {
+        try {
+            let status = await build.finishedStatus(commit);
+            return { ...state, status: status.status, exitcode: status.exitcode }
+        } catch ({ errors }) {
+            return { ...state, errors }
+        }
+    }
+
     @on('new-output') newOutput = async (state, newLog) => {
         return { ...state, output_combined: state.output_combined + newLog }
+    }
+
+    @on('ws-msg') wsMsg = async (state, message) => {
+        console.log("ws message: " + message)
+        let status = JSON.parse(message)
+        if (status.commit == state.commit) {
+            return { ...state, status: status.status }
+        }
     }
 }
 
