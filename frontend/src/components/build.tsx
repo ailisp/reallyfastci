@@ -41,7 +41,7 @@ class BuildComponent extends Component {
                 } else {
                     this.startWebSocket(commit)
                     this.run('running-build-log', commit)
-                    return { ...state, commit, status }
+                    return a
                 }
             } catch ({ errors }) {
                 return { ...state, commit, errors }
@@ -63,20 +63,22 @@ class BuildComponent extends Component {
 
     @on('running-build-log') runningBuildLog = async (state, commit) => {
         const fetchedResource = await fetch(`${defaultBasePath}/api/build/${commit}/output`)
-        const reader = await fetchedResource.body.getReader()
-        const decoder = new TextDecoder('utf-8');
-        const _this = this;
+        if (fetchedResource.status == 200) {
+            const reader = await fetchedResource.body.getReader()
+            const decoder = new TextDecoder('utf-8');
+            const _this = this;
 
-        reader.read().then(function processText({ done, value }) {
-            if (done) {
-                this.websocket.close()
-                _this.run('finished-status', commit)
-                return;
-            }
+            reader.read().then(function processText({ done, value }) {
+                if (done) {
+                    _this.websocket.close()
+                    _this.run('finished-status', commit)
+                    return;
+                }
 
-            _this.run('new-output', decoder.decode(value));
-            reader.read().then(processText);
-        })
+                _this.run('new-output', decoder.decode(value));
+                reader.read().then(processText);
+            })
+        }
     }
 
     @on('finished-status') finishedStatus = async (state, commit) => {
@@ -96,6 +98,7 @@ class BuildComponent extends Component {
         console.log("ws message: " + message)
         let status = JSON.parse(message)
         if (status.commit == state.commit) {
+            this.run('running-build-log', state.commit)
             return { ...state, status: status.status }
         }
     }
