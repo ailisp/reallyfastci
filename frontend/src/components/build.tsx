@@ -44,7 +44,7 @@ class BuildComponent extends Component {
             if (a.exitcode != null) {
                 return { commit, ...a }
             } else {
-                this.run('build-status', a.status)
+                this.run('running-build-log');
                 return { commit, status: a.status }
             }
         } catch ({ errors }) {
@@ -70,9 +70,6 @@ class BuildComponent extends Component {
                 _this.run('new-output', decoder.decode(value));
                 reader.read().then(processText);
             })
-        } else {
-            if (state.status != 'Succeed' && state.status != 'Cancelled' && state.status != 'Failed')
-                setInterval(() => this.run('running-build-log'), 5000);
         }
     }
 
@@ -94,15 +91,8 @@ class BuildComponent extends Component {
         console.log("build status event: " + event)
         let status = JSON.parse(event)
         if (status.commit == state.commit) {
-            this.run('build-status', status.status)
+            return { ...state, status: status.status }
         }
-    }
-
-    @on('build-status') buildStatus = async (state, status) => {
-        if (status == 'Script Copied' && state.status != 'Script Copied') {
-            this.run('running-build-log');
-        }
-        return { ...state, status }
     }
 }
 

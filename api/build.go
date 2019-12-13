@@ -86,7 +86,7 @@ func RunningOutput(c echo.Context) (err error) {
 	commit := c.Param("commit")
 	exitCodeFilename := fmt.Sprintf("build/%v/exitcode", commit)
 	outputFilename := fmt.Sprintf("build/%v/output_combined.log", commit)
-	if _, err := os.Stat(outputFilename); err == nil {
+	if status := build.GetRunningBuild(commit); status != core.BuildNotRunning {
 		c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextPlainCharsetUTF8)
 		c.Response().WriteHeader(http.StatusOK)
 		outputTail, _ := tail.TailFile(outputFilename, tail.Config{
