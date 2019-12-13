@@ -19,7 +19,7 @@ func runBuildEventAgent() {
 		buildEvent := <-buildEventChan
 		log.Printf("Build event: %+v", buildEvent)
 		notification.NotifyBuildStatusGithub(buildEvent)
-		notification.NotifyWebSocket(buildEvent)
+		notification.NotifySse(buildEvent)
 		if buildEvent.Status >= core.BuildSucceed {
 			manager.buildFinishEvents <- buildEvent
 		}

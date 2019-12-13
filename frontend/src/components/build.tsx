@@ -33,7 +33,7 @@ class BuildComponent extends Component {
     }
 
     @on('#build') build = async (state, commit) => {
-        if (commit != "") {
+        if (state.commit == "" || state.commit != commit) {
             try {
                 let a = { ...state, ...await build.build(commit), commit };
                 if (a.exitcode != null) {

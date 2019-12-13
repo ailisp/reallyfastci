@@ -32,6 +32,7 @@ func main() {
 	machine.InitMachineManager()
 	build.InitBuildManager()
 	webhook.InitWebhook()
+	notification.InitSse()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -43,7 +44,10 @@ func main() {
 	e.GET("/api/build/:commit", api.Build)
 	e.GET("/api/build/:commit/exitcode", api.BuildExitCode)
 	e.GET("/api/build", api.Index)
-	e.GET("/ws", notification.WebSocket)
+	e.GET("/sse", func(c echo.Context) (err error) {
+		notification.SseServer.HTTPHandler(c.Response().Writer, c.Request())
+		return nil
+	})
 	e.Static("/", ".")
 
 	// Start server

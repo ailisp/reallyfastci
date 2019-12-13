@@ -15,8 +15,9 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
+	github.com/r3labs/sse v0.0.0-20191120111931-24eacf438413
 	github.com/stvp/go-toml-config v0.0.0-20170523163211-314328849d78
-	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	golang.org/x/net v0.0.0-20191116160921-f9c825593386
 	golang.org/x/text v0.3.2
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
