@@ -15,7 +15,10 @@ func InitSse() {
 }
 
 func NotifySse(event *core.BuildEvent) {
-	data, _ := json.Marshal(event)
+	data, _ := json.Marshal(map[string]string{
+		"commit": event.Commit,
+		"status": core.BuildStatusStr(event.Status),
+	})
 	SseServer.Publish("build-status", &sse.Event{
 		Data: data,
 	})

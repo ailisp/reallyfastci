@@ -31,7 +31,3 @@ export const build = {
     build: (commit) => get<BuildResponse>(`/api/build/${commit}`),
     finishedStatus: (commit) => get<FinishedStatus>(`/api/build/${commit}/exitcode`)
 }
-
-export const finshedStatus = {
-
-}

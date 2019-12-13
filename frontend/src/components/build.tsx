@@ -1,5 +1,7 @@
 import app, { Component, on } from 'apprun';
 import { build } from '../api';
+import { runInThisContext } from 'vm';
+import { stat } from 'fs';
 declare var defaultBasePath;
 
 interface State {
@@ -10,7 +12,7 @@ interface State {
 }
 
 class BuildComponent extends Component {
-    websocket: any;
+    eventSource: any = null;
 
     state: State = {
         commit: "",
@@ -33,35 +35,26 @@ class BuildComponent extends Component {
     }
 
     @on('#build') build = async (state, commit) => {
-        if (state.commit == "" || state.commit != commit) {
-            try {
-                let a = { ...state, ...await build.build(commit), commit };
-                if (a.exitcode != null) {
-                    return a
-                } else {
-                    this.startWebSocket(commit)
-                    this.run('running-build-log', commit)
-                    return a
-                }
-            } catch ({ errors }) {
-                return { ...state, commit, errors }
+        if (this.eventSource == null) {
+            this.eventSource = new EventSource(`${defaultBasePath}/sse?stream=build-status`);
+            this.eventSource.onmessage = (evt) => this.run('build-status-event', evt.data);
+        }
+        try {
+            let a = await build.build(commit);
+            if (a.exitcode != null) {
+                return { commit, ...a }
+            } else {
+                this.run('build-status', a.status)
+                return { commit, status: a.status }
             }
+        } catch ({ errors }) {
+            return { ...state, commit, errors }
         }
     }
 
-    startWebSocket = (commit) => {
-        this.websocket = new WebSocket(`${defaultBasePath}/ws`.replace('http', 'ws'));
-        this.websocket.onopen = (evt) => {
-            this.websocket.send("open")
-            console.log("websocket open");
-        }
-        this.websocket.onclose = (evt) => console.log("websocket close");
-        this.websocket.onmessage = (evt) => this.run('ws-msg', evt.data);
-        this.websocket.onerror = (evt: MessageEvent) => console.log("websocket error: " + evt.data);
-    }
-
-
-    @on('running-build-log') runningBuildLog = async (state, commit) => {
+    @on('running-build-log') runningBuildLog = async (state) => {
+        console.log('running-build-log')
+        let { commit } = state;
         const fetchedResource = await fetch(`${defaultBasePath}/api/build/${commit}/output`)
         if (fetchedResource.status == 200) {
             const reader = await fetchedResource.body.getReader()
@@ -70,18 +63,21 @@ class BuildComponent extends Component {
 
             reader.read().then(function processText({ done, value }) {
                 if (done) {
-                    _this.websocket.close()
-                    _this.run('finished-status', commit)
+                    _this.run('finished-status')
                     return;
                 }
 
                 _this.run('new-output', decoder.decode(value));
                 reader.read().then(processText);
             })
+        } else {
+            if (state.status != 'Succeed' && state.status != 'Cancelled' && state.status != 'Failed')
+                setInterval(() => this.run('running-build-log'), 5000);
         }
     }
 
-    @on('finished-status') finishedStatus = async (state, commit) => {
+    @on('finished-status') finishedStatus = async (state) => {
+        let { commit } = state;
         try {
             let status = await build.finishedStatus(commit);
             return { ...state, status: status.status, exitcode: status.exitcode }
@@ -94,13 +90,19 @@ class BuildComponent extends Component {
         return { ...state, output_combined: state.output_combined + newLog }
     }
 
-    @on('ws-msg') wsMsg = async (state, message) => {
-        console.log("ws message: " + message)
-        let status = JSON.parse(message)
+    @on('build-status-event') buildStatusEvent = async (state, event) => {
+        console.log("build status event: " + event)
+        let status = JSON.parse(event)
         if (status.commit == state.commit) {
-            this.run('running-build-log', state.commit)
-            return { ...state, status: status.status }
+            this.run('build-status', status.status)
         }
+    }
+
+    @on('build-status') buildStatus = async (state, status) => {
+        if (status == 'Script Copied' && state.status != 'Script Copied') {
+            this.run('running-build-log');
+        }
+        return { ...state, status }
     }
 }
 
