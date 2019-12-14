@@ -29,6 +29,7 @@ def run_build(*, name, commit, local_path):
                 oc.write(f'Exit Code: {exitcode}\n')
 
     q, p = machine.run_stream('bash', input=f'''
+export RFCI_COMMIT={commit}
 ./{local_path.split('/')[-1]}
 ''')
     handle_stream(q, stdout_handler=stdout_handler,
