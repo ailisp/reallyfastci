@@ -1,13 +1,15 @@
 Short term:
-1. Test
-2. Frontend
-3. Deployment Script
-4. Finish WebSocket
+0. Deployment Script
+1. Frontend: close sse when doesn't need
+2. Frontend: basic css
+3. Makefile: add frontend
 
 Middle term:
+0. Automatic test
 1. More customizable build config
 2. Replace build cycle scripts with Golang
 3. Advanced machine manager, optimize instance utilization
 4. Database
 5. Build output compression
 6. Doc
+7. Cleanup on exit
