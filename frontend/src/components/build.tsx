@@ -44,7 +44,7 @@ class BuildComponent extends Component {
             if (a.exitcode != null) {
                 return { commit, ...a }
             } else {
-                this.run('running-build-log');
+                this.run('running-build-log', commit);
                 return { commit, status: a.status }
             }
         } catch ({ errors }) {
@@ -52,9 +52,8 @@ class BuildComponent extends Component {
         }
     }
 
-    @on('running-build-log') runningBuildLog = async (state) => {
+    @on('running-build-log') runningBuildLog = async (state, commit) => {
         console.log('running-build-log')
-        let { commit } = state;
         const fetchedResource = await fetch(`${defaultBasePath}/api/build/${commit}/output`)
         if (fetchedResource.status == 200) {
             const reader = await fetchedResource.body.getReader()
