@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/ailisp/reallyfastci/build"
 	"github.com/ailisp/reallyfastci/core"
@@ -41,7 +42,7 @@ func finishedBuildStatus(commit string) *buildFinishedStatus {
 	exitCodeFilename := fmt.Sprintf("build/%v/exitcode", commit)
 	if _, err := os.Stat(exitCodeFilename); err == nil {
 		exitCodeContent, _ := ioutil.ReadFile(exitCodeFilename)
-		exitCode, _ := strconv.Atoi(string(exitCodeContent))
+		exitCode, _ := strconv.Atoi(strings.TrimSpace(string(exitCodeContent)))
 		status := core.BuildStatusStr(core.BuildSucceed)
 		if exitCode > 0 {
 			status = core.BuildStatusStr(core.BuildFailed)
