@@ -89,6 +89,10 @@ class BuildComponent extends Component {
     @on('build-status-event') buildStatusEvent = async (state, event) => {
         let status = JSON.parse(event)
         if (status.commit == state.commit) {
+            if (status == "Succeed" || status == "Failed" || status == "Cancelled") {
+                this.eventSource.close();
+                this.eventSource = null;
+            }
             return { ...state, status: status.status }
         }
     }

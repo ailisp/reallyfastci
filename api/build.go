@@ -92,7 +92,6 @@ func RunningOutput(c echo.Context) (err error) {
 		c.Response().WriteHeader(http.StatusOK)
 		outputTail, _ := tail.TailFile(outputFilename, tail.Config{
 			Follow: true, ReOpen: true, MustExist: false,
-			Logger: tail.DiscardingLogger,
 		})
 		exitcodeTail, _ := tail.TailFile(exitCodeFilename, tail.Config{
 			Logger:    tail.DiscardingLogger,
