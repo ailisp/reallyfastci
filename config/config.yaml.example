@@ -11,6 +11,7 @@ machine:
     image_project: ubuntu-os-cloud
     image_family: ubuntu-1804-lts
     zone: us-west2-a
+    preemptible: true
 
 build:
     script: ./build.sh

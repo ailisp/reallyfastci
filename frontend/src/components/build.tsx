@@ -87,7 +87,6 @@ class BuildComponent extends Component {
     }
 
     @on('build-status-event') buildStatusEvent = async (state, event) => {
-        console.log("build status event: " + event)
         let status = JSON.parse(event)
         if (status.commit == state.commit) {
             return { ...state, status: status.status }

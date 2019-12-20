@@ -15,11 +15,12 @@ var Config = struct {
 	Machine struct {
 		Prefix       string `default:"reallyfastci-runner"`
 		MaxMachines  uint64 `yaml:"max_machines" default:"10"`
-		IdleMachines uint64 `yaml:"idle_machines" default:"2"`
+		IdleMachines uint64 `yaml:"idle_machines" default:"0"`
 		MachineType  string `yaml:"machine_type" default:"n1-standard-32"`
 		DiskSizeGB   uint64 `yaml:"disk_size_gb" default:"50"`
 		ImageProject string `yaml:"image_project" default:"ubuntu-os-cloud"`
 		ImageFamily  string `yaml:"image_family" default:"ubuntu-1804-lts"`
+		Preemptible  bool   `default:"false"`
 		Zone         string `default:"us-west2-a"`
 	}
 
