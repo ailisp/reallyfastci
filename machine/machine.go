@@ -18,13 +18,16 @@ func newMachine(machineName string, failChan chan bool) (machineChan chan *Machi
 	machineChan = make(chan *Machine)
 
 	go func() {
-		err := <-script.Run("create_machine.py",
-			"--name", machine.Name,
+		args := []string{"--name", machine.Name,
 			"--machine_type", config.Config.Machine.MachineType,
 			"--disk_size", strconv.FormatUint(config.Config.Machine.DiskSizeGB, 10),
 			"--image_project", config.Config.Machine.ImageProject,
 			"--image_family", config.Config.Machine.ImageFamily,
-			"--zone", config.Config.Machine.Zone)
+			"--zone", config.Config.Machine.Zone}
+		if config.Config.Machine.Preemptible {
+			args = append(args, "--preemptible")
+		}
+		err := <-script.Run("create_machine.py", args...)
 		if err != nil {
 			machineChan <- nil
 			failChan <- true

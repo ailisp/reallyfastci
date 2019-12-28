@@ -3,7 +3,7 @@ import argparse
 from rc import gcloud
 
 
-def create_machine(*, name, machine_type, disk_size, image_project, image_family, zone):
+def create_machine(*, name, machine_type, disk_size, image_project, image_family, zone, preemptible):
     machine = gcloud.create(
         name=name,
         machine_type=machine_type,
@@ -11,7 +11,7 @@ def create_machine(*, name, machine_type, disk_size, image_project, image_family
         image_project=image_project,
         image_family=image_family,
         zone=zone,
-        preemptible=True,
+        preemptible=preemptible,
         firewall_allows=[]
     )
     if machine:
@@ -34,6 +34,8 @@ if __name__ == "__main__":
                         help='Image family of disk image')
     parser.add_argument('--zone', required=True,
                         help='Zone of the gcloud machine')
+    parser.add_argument('--preemptible', action='store_true',
+                        help='Whether instance is preemptible (1/5 price but can fail at any time)')
 
     args = parser.parse_args()
     create_machine(**vars(args))
