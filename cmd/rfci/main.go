@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -52,7 +53,7 @@ func main() {
 
 	// Start server
 	go func() {
-		if err := e.Start(":1323"); err != nil {
+		if err := e.Start(fmt.Sprintf(":%v", config.Config.ApiPort)); err != nil {
 			e.Logger.Info("shutting down the server")
 		}
 	}()

@@ -31,7 +31,7 @@ func notifyGithub(event *core.BuildEvent, status string) {
 	resp, body, errs := request.Post(githubUrl).
 		Set("Authorization", fmt.Sprintf("token %v", config.Config.GithubToken)).
 		Set("Accept", "application/vnd.github.antiope-preview+json").
-		Send(fmt.Sprintf(`{"state":"%v","target_url":"%v","context":"reallyfastci"}`, status, rfciUrl)).
+		Send(fmt.Sprintf(`{"state":"%v","target_url":"%v","context":"%v"}`, status, rfciUrl, config.Config.Build.JobName)).
 		End()
 	if len(errs) > 0 {
 		log.Printf("Error updating github status: %+v", errs)

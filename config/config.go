@@ -8,6 +8,7 @@ import (
 
 var Config = struct {
 	ReallyfastciUrl     string   `yaml:"reallyfastci_url" required:"true"`
+	ApiPort             int      `yaml:"api_port" default:"1323"`
 	GithubToken         string   `yaml:"github_token" required:"true" env:"GITHUB_TOKEN"`
 	RepoUrl             string   `yaml:"repo_url" required:"true"`
 	PushTriggerBranches []string `yaml:"push_trigger_branches"`
@@ -25,6 +26,7 @@ var Config = struct {
 	}
 
 	Build struct {
+		JobName        string `default:"reallyfastci"`
 		Script         string `default:"./build.sh"`
 		TimeoutMinutes uint64 `yaml:"timeout_minutes" default:"30"`
 	}
